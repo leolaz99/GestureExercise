@@ -4,10 +4,10 @@ public class Joystick : MonoBehaviour
 {
     public Transform player;
     public float speed = 5.0f;
-    bool touchStart = false;
+    bool isMoving;
     public GameObject prefab;
-    Vector3 pointA;
-    Vector3 pointB;
+    public Vector2 startPos;
+    public Vector2 direction;
 
     void moveCharacter(Vector3 direction)
     {
@@ -23,38 +23,38 @@ public class Joystick : MonoBehaviour
             {
                 if (Input.touches[i].position.x < Screen.width / 2)
                 {
-                    if (Input.GetMouseButtonDown(0))
+                    switch (Input.touches[i].phase)
                     {
-                        pointA = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.z));
-                    }
+                        case TouchPhase.Began:
+                            startPos = Input.touches[i].position;
+                            break;
 
-                    if (Input.GetMouseButton(0))
-                    {
-                        touchStart = true;
-                        pointB = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.z));
-                    }
+                        case TouchPhase.Moved:
+                            direction = Input.touches[i].position - startPos;
+                            isMoving = true;
+                            break;
 
-                    else
-                    {
-                        touchStart = false;
+                        case TouchPhase.Ended:
+                            isMoving = false;
+                            break;
                     }
                 }
+
 
                 if (Input.touches[i].position.x > Screen.width / 2)
                 {
                     Instantiate(prefab, player.position, player.rotation);
                 }
-            }          
+            }
         }
     }
     
     void FixedUpdate()
     {
-        if (touchStart)
+        if (isMoving)
         {
-            Vector3 offset = pointB - pointA;
-            Vector3 direction = Vector2.ClampMagnitude(offset, 1.0f);
-            moveCharacter(direction * -1);
+            Vector3 clamping = Vector2.ClampMagnitude(direction, 1.0f);
+            moveCharacter(clamping);
         }
     } 
 }
